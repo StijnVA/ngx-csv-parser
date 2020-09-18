@@ -20,7 +20,8 @@ export class NgxCsvParser {
 
     private defaultCSVParserConfig = {
         header: true,
-        delimiter: ','
+        delimiter: ',',
+        numberOfRowsToSkipBeforeHeader: 0
     };
 
     parse(csvFile: File, config: CSVParserConfig): Observable<Array<any> | NgxCSVParserError> {
@@ -43,7 +44,7 @@ export class NgxCsvParser {
                         const csvData = reader.result;
                         const csvRecordsArray = this.csvStringToArray((csvData as string).trim(), config.delimiter);
 
-                        const headersRow = this.getHeaderArray(csvRecordsArray);
+                        const headersRow = this.getHeaderArray(csvRecordsArray, config);
 
                         csvRecords = this.getDataRecordsArrayFromCSVFile(csvRecordsArray, headersRow.length, config);
 
@@ -83,11 +84,11 @@ export class NgxCsvParser {
         return resultCSV;
     }
 
-    getDataRecordsArrayFromCSVFile(csvRecordsArray: any, headerLength: any, config: any) {
+    getDataRecordsArrayFromCSVFile(csvRecordsArray: any, headerLength: any, config: CSVParserConfig) {
         const dataArr = [];
-        const headersArray = csvRecordsArray[0];
+        const headersArray = csvRecordsArray[config.numberOfRowsToSkipBeforeHeader];
 
-        const startingRowToParseData = config.header ? 1 : 0;
+        const startingRowToParseData = config.numberOfRowsToSkipBeforeHeader + (config.header ? 1 : 0);
 
         for (let i = startingRowToParseData; i < csvRecordsArray.length; i++) {
             const data = csvRecordsArray[i];
@@ -115,8 +116,8 @@ export class NgxCsvParser {
         return file.name.endsWith('.csv');
     }
 
-    getHeaderArray(csvRecordsArr: any) {
-        const headers = csvRecordsArr[0];
+  getHeaderArray(csvRecordsArr: any, config: CSVParserConfig) {
+        const headers = csvRecordsArr[config.numberOfRowsToSkipBeforeHeader];
         const headerArray = [];
         for (const header of headers) {
             headerArray.push(header);
@@ -154,6 +155,7 @@ export class NgxCsvParser {
 class CSVParserConfig {
     header?: boolean;
     delimiter?: string;
+    numberOfRowsToSkipBeforeHeader?: number;
 
     constructor() { }
 }
